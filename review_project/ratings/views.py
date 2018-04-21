@@ -183,6 +183,7 @@ class UserDetailView(generic.DetailView):
         try:
             target = models.Profile.objects.get(userid = kwargs['uid'])
             target_user = models.User.objects.get(username = kwargs['uid'])
+            full_name = target_user.first_name + " " + target_user.last_name            
         except:
             return render(request, error_template ,{'error': "Invalid Post Request."})
         if request.user :
