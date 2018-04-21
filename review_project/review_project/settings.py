@@ -27,7 +27,7 @@ SECRET_KEY = 'n-r**2*ld&9ch^4b&!hjua7dip&dp_&^&b6u=llpve*akw0xjv'
 DEBUG = True
 LOGIN_URL = 'ratings:login'
 LOGIN_REDIRECT_URL = 'ratings:index'
-ALLOWED_HOSTS = ['10.17.51.99']
+ALLOWED_HOSTS = ['10.17.51.99','localhost']
 
 
 # Application definition

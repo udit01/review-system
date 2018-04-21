@@ -73,8 +73,9 @@ body{
 }
 
 .work-row {
-    overflow: auto;
+    overflow-x: auto;
     white-space: nowrap;
+    width: 100%;
     flex-direction: row !important;    
     padding: 5px;
     margin: 10px 0px;
@@ -82,10 +83,13 @@ body{
 
 .work-card {
     display: inline-block !important;
-    width: 25%;
-    min-width: 200px;
+    /* width: 50%; */
+    white-space: pre-wrap;
+    width: 250px;
+    max-height: 150px;
     margin: 5px;
-    flex-direction: row !important;
+    overflow-y: auto;
+    /* flex-direction: column !important; */
 }
 
 .logged-user {
