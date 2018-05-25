@@ -16,9 +16,9 @@ $ pip install -r requirements.txt
 ```
 
 2. Using Virtualenv :
-```
-Open the ReviewSystem-master folder then type:
 
+Open the ReviewSystem-master folder then type:
+```
 $ virtualenv ReviewSystem
 $ . ReviewSystem/bin/activate
 $ pip install -r requirements.txt
