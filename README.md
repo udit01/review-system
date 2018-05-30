@@ -56,3 +56,7 @@ One can publicise his/her contribution by adding "works" on own's profile.
 8. Send a prompt if login fails.
 
 9. Adding a considerable amount of "works" makes the individual fields non-readable. Need to have dynamic blocks which change dimensions according to the text.
+
+# Report Bugs/Suggestions
+Follow this link - http://bit.do/bugsuggestion to report a bug or give a suggestion.
+
