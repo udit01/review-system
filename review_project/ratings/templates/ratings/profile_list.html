@@ -9,29 +9,32 @@
             <tr>
                 <th scope="col" class="col-sm-3">User Id</th>
                 <th scope="col" class="col-sm-2">Rating</th>
-                <th scope="col" class="col-sm-7">Latest Work</th>
+                <th scope="col" class="col-sm-5">Latest Work</th>
+                <th scope="col" class="col-sm-2">Rated?</th>
             </tr>
         </thead>
         <tbody>
-            {% for user in object_list %}
-                {%if user.user.is_superuser%}
-                {%else%}
+            {% for user in object_dictionary %}
+
                 <tr>
-                    <th scope="col"> <a href="{{ user.get_absolute_url }}">
-                        <strong>{{ user.userid }}</strong>
+                    <th scope="col"> <a href="{{ user.profile.get_absolute_url }}">
+                        <strong>{{ user.profile.userid }}</strong>
                     </a></th>
                     <td >
                             {% if ratercansee %}
-                            <strong>{{ user.current_rating }}</strong>
+                            <strong>{{ user.profile.current_rating }}</strong>
                             {% else %}
                             <strong>Rate everyone to see ratings.</strong>
                             {% endif %}
                     </td>
-                    <td > {% if user.get_latest_work %}
-                        {{ user.get_latest_work }}
+                    <td > {% if user.profile.get_latest_work %}
+                        {{ user.profile.get_latest_work }}
                         {% else %} {% endif %}</td>
+                        <td > {% if user.has_rated %}
+                            {{ user.has_rated }}
+                            {% else %} {% endif %}</td>
                 </tr>
-                {%endif%}
+
             {% endfor %}
         </tbody>
     </table>

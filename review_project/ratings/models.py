@@ -91,6 +91,21 @@ class Profile(models.Model):
             return decrypted_work[0]
         except:
             return None
+            
+    def has_rated(self,user1):
+        if self==user1 :
+            return "Self"
+        elif user1.user.is_superuser or self.user.is_superuser:
+            pass
+        else:
+            lastRating= (Rating.objects.filter(user1=user1, user2=self).order_by('-updated_at'))[0] #Last Rating between the 2 users
+            lastRatingTime=lastRating.created_at.timestamp()
+            timeNow=datetime.datetime.now().timestamp()
+            lastSudoUpdate=((Control.objects.all().order_by('-updated_at'))[0]).updated_at.timestamp()
+            if abs(lastRatingTime-timeNow)<abs(timeNow-lastSudoUpdate):
+                return True
+            else:
+                return False
 
     @receiver(post_save, sender=User)
     def create_user_profile(sender, instance, created, **kwargs):
