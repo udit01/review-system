@@ -113,7 +113,7 @@
                         {{radio}}
                         </div>
                         {% endfor %}
-                    </div>                                    
+                    </div>
                     {% else %}
                     <div class="col-sm-3">{{ field }}</div>
                     {% endif %}
@@ -147,7 +147,8 @@
             <thead class="thead-light">
                 <tr>
                     <th scope="col" class="col-sm-3">Rating</th>
-                    <th scope="col" class="col-sm-9">Review</th>
+                    <th scope="col" class="col-sm-6">Review</th>
+                    <th scope="col" class="col-sm-3">Session</th>
                 </tr>
             </thead>
             <tbody>
@@ -155,6 +156,7 @@
                 <tr>
                     <td > <strong>{{i.rating}}</strong> </td>
                     <td > {{i.review}}</td>
+                    <td >  {{i.session}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

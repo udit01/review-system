@@ -114,6 +114,14 @@ class Rating(models.Model):
 
     def __str__(self):
         return (self.user1.userid + " rated " + self.user2.userid)
+    def get_session_number(self):
+        ratingTime = self.created_at.timestamp()
+        sessionSet=Control.objects.all().order_by('-updated_at')
+        for each in sessionSet:
+            if each.updated_at.timestamp()>ratingTime:
+                continue
+            else:
+                return each
 
 class Work(models.Model):
     user = models.ForeignKey(Profile,on_delete=models.CASCADE)
@@ -161,4 +169,4 @@ class Control(models.Model):
                 rating.save()
 
     def __str__(self):
-        return ("Session Number:" + self.number)
+        return (str(self.SessionNumber))

@@ -199,6 +199,9 @@ class UserDetailView(generic.DetailView):
             together = []
             if(current):
                 curr_ratings = models.Rating.objects.filter(user2=rater).order_by('-updated_at')
+                sessions=[]
+                for j in range(len(curr_ratings)):
+                    sessions.append((curr_ratings[j]).get_session_number)
                 try:
                     reviews=decrypt(curr_ratings,'review')
                     ratings = decrypt(curr_ratings,'rating')
@@ -206,7 +209,7 @@ class UserDetailView(generic.DetailView):
                     reviews=None
                     ratings=None
                 for j in range(len(reviews)):
-                    together.append({'rating':ratings[j],'review':reviews[j]})
+                    together.append({'rating':ratings[j],'review':reviews[j],'session':sessions[j]})
 
 
             return render(request, self.template_name, {'logged_in':logged_in,'works_together':works_together, 'user':user, 'name':full_name, 'current':current, 'current_rated':current_rating, 'works': works, 'ratingFound':ratingFound, 'form':form, 'workform':form_work, 'updateform':form_update, 'together':together, 'rater':rater,'current_review':current_review})
