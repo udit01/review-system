@@ -134,7 +134,7 @@ class Work(models.Model):
         return self.work
 
 class Control(models.Model):
-    SessionNumber = models.IntegerField(default=0, unique=True)
+    SessionNumber = models.IntegerField(default=0)
     # CHOICES=[( True ,'Enable'), # Make strings if True and False naievly doesn't work
     #         (False,'Disable')]
 

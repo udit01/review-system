@@ -103,9 +103,14 @@ class SudoView(View):
         form = self.form_class(request.POST)
         logged_in=True
         if form.is_valid() :
-            form.save()
+            SessionNumber=form.cleaned_data['SessionNumber']
             # commit = False ?
             ctrl = (models.Control.objects.all().order_by('-updated_at'))[0]
+            if ctrl.SessionNumber==SessionNumber: #Don't create new query object, instead change the current
+                ctrl.EveryoneCanSee=form.cleaned_data['EveryoneCanSee']
+                ctrl.EveryoneCanRate=form.cleaned_data['EveryoneCanRate']
+                ctrl.EveryoneCanEdit=form.cleaned_data['EveryoneCanEdit']
+                ctrl.UpdateEveryone=form.cleaned_data['UpdateEveryone']
             ctrl.updateOthers()
             ctrl.save()
             # idk why but just do it
