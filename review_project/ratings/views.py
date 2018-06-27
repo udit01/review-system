@@ -121,19 +121,16 @@ class SudoView(View):
 
         if form.is_valid() :
             SessionNumber=form.cleaned_data['SessionNumber']
-            RegistrationEnabled=form.cleaned_data['RegistrationEnabled']
-            EveryoneCanSee=form.cleaned_data['EveryoneCanSee']
-            EveryoneCanRate=form.cleaned_data['EveryoneCanRate']
-            EveryoneCanEdit=form.cleaned_data['EveryoneCanEdit']
-            UpdateEveryone=form.cleaned_data['UpdateEveryone']
-            ctrl= models.Control(SessionNumber = SessionNumber, RegistrationEnabled=RegistrationEnabled, EveryoneCanSee=EveryoneCanSee,
-             EveryoneCanEdit=EveryoneCanEdit, EveryoneCanRate=EveryoneCanRate, UpdateEveryone=UpdateEveryone)
-            #form.save()
             # commit = False ?
-            ctrl.save()
             ctrl = (models.Control.objects.all().order_by('-updated_at'))[0]
+            if ctrl.SessionNumber==SessionNumber: #Don't create new query object, instead change the current
+                ctrl.RegistrationEnabled=form.cleaned_data['RegistrationEnabled']
+                ctrl.EveryoneCanSee=form.cleaned_data['EveryoneCanSee']
+                ctrl.EveryoneCanRate=form.cleaned_data['EveryoneCanRate']
+                ctrl.EveryoneCanEdit=form.cleaned_data['EveryoneCanEdit']
+                ctrl.UpdateEveryone=form.cleaned_data['UpdateEveryone']
             ctrl.updateOthers()
-
+            ctrl.save()
             # idk why but just do it
             return redirect(self.request.path_info)
         else :
