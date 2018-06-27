@@ -107,6 +107,7 @@ class SudoView(View):
             # commit = False ?
             ctrl = (models.Control.objects.all().order_by('-updated_at'))[0]
             if ctrl.SessionNumber==SessionNumber: #Don't create new query object, instead change the current
+                ctrl.RegistrationEnabled=form.cleaned_data['RegistrationEnabled']
                 ctrl.EveryoneCanSee=form.cleaned_data['EveryoneCanSee']
                 ctrl.EveryoneCanRate=form.cleaned_data['EveryoneCanRate']
                 ctrl.EveryoneCanEdit=form.cleaned_data['EveryoneCanEdit']
