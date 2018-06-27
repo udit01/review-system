@@ -91,7 +91,7 @@ class Profile(models.Model):
             return decrypted_work[0]
         except:
             return None
-            
+
     def has_rated(self,user1):
         if self==user1 :
             return "Self"
@@ -176,4 +176,4 @@ class Control(models.Model):
                 rating.save()
 
     def __str__(self):
-        return ("Session Number:" + str(self.SessionNumber))
+        return (str(self.SessionNumber))

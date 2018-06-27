@@ -129,6 +129,16 @@ class SudoView(View):
                 ctrl.EveryoneCanRate=form.cleaned_data['EveryoneCanRate']
                 ctrl.EveryoneCanEdit=form.cleaned_data['EveryoneCanEdit']
                 ctrl.UpdateEveryone=form.cleaned_data['UpdateEveryone']
+            else:
+                RegistrationEnabled=form.cleaned_data['RegistrationEnabled']
+                EveryoneCanSee=form.cleaned_data['EveryoneCanSee']
+                EveryoneCanRate=form.cleaned_data['EveryoneCanRate']
+                EveryoneCanEdit=form.cleaned_data['EveryoneCanEdit']
+                UpdateEveryone=form.cleaned_data['UpdateEveryone']
+                new_ctrl=models.Control(SessionNumber=SessionNumber,RegistrationEnabled=RegistrationEnabled,
+                EveryoneCanSee=EveryoneCanSee,EveryoneCanEdit=EveryoneCanEdit,EveryoneCanRate=EveryoneCanRate,
+                UpdateEveryone=UpdateEveryone)
+                ctrl=new_ctrl
             ctrl.updateOthers()
             ctrl.save()
             # idk why but just do it
