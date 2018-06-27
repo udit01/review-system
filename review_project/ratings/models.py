@@ -93,15 +93,22 @@ class Profile(models.Model):
             return None
     def session_wise_ratings(self):
        ratings=Rating.objects.all().filter(user2=self)
+       ratinglist=decrypt(ratings,'rating')
        S={}#Dictionary with keys are session and values as a list of ratings(decrypted?)
-       for each in ratings:
-           session=each.get_session_number()
+       for each in range(len(ratings)):
+           session=ratings[each].get_session_number()
            if session in S.keys():
                value=S[session]
-               value.append(each.rating) #rating is encrypted
+               value.append(ratinglist[each]) #rating is decrypted
                S[session]=value
            else:
-               S[session]=each.rating #rating is encrypted
+               value=[]
+               value.append(ratinglist[each])
+               S[session]=value #rating is decrypted
+       for t in S:
+           value=S[t]
+           avg=sum(value)/len(value)
+           S[t]=avg
        return S
 
     @receiver(post_save, sender=User)
@@ -133,7 +140,9 @@ class Rating(models.Model):
             if each.updated_at.timestamp()>ratingTime:
                 continue
             else:
-                return each
+                sessno=str(each)
+                sessno.lstrip("Control:")
+                return sessno
 
 class Work(models.Model):
     user = models.ForeignKey(Profile,on_delete=models.CASCADE)

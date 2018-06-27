@@ -161,6 +161,30 @@
                 {% endfor %}
             </tbody>
         </table>
+        {% if user.session_wise_ratings.items%}
+        <table class="table">
+            <thead class="thead-light">
+                <tr>
+                    <th scope="col" class="col-sm-9">Session</th>
+                    <th scope="col" class="col-sm-3">Rating</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i,j in user.session_wise_ratings.items %}
+                <tr>
+                    <td > <strong>{{i}}</strong> </td>
+                    <td > {{j}}</td>
+                </tr>
+                {% endfor %}
+
+                <tr>
+                  <td><strong>Cumulative</strong></td>
+                  <td>{{user.cumulated_rating}}</td>
+                </tr>
+
+            </tbody>
+        </table>
+        {% endif %}
         {% endif %}
     </div>
     {% if current %}
