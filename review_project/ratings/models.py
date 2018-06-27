@@ -91,6 +91,18 @@ class Profile(models.Model):
             return decrypted_work[0]
         except:
             return None
+    def session_wise_ratings(self):
+       ratings=Rating.objects.all().filter(user2=self)
+       S={}#Dictionary with keys are session and values as a list of ratings(decrypted?)
+       for each in ratings:
+           session=each.get_session_number()
+           if session in S.keys():
+               value=S[session]
+               value.append(each.rating) #rating is encrypted
+               S[session]=value
+           else:
+               S[session]=each.rating #rating is encrypted
+       return S
 
     @receiver(post_save, sender=User)
     def create_user_profile(sender, instance, created, **kwargs):
