@@ -101,7 +101,7 @@ class SudoView(View):
     @method_decorator(user_passes_test(lambda u: u.is_superuser,login_url='/login/'))
     def post(self,request):
         form = self.form_class(request.POST)
-
+        logged_in=True
         if form.is_valid() :
             form.save()
             # commit = False ?
