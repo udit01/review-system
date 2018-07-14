@@ -30,6 +30,9 @@ class Profile(models.Model):
     current_rating = models.PositiveIntegerField(MaxValueValidator(10),default=0)
     cumulated_rating = models.PositiveIntegerField(MaxValueValidator(10),default=0)
 
+    public_key=models.TextField()     #user public key
+    ratings_given=models.TextField()    #list of ratings given(encrypted)
+
     def __str__(self):
         return self.userid
 
@@ -102,18 +105,23 @@ class Profile(models.Model):
         instance.profile.save()
 
 class Rating(models.Model):
-    #user1 rating to user2
-    user1  = models.ForeignKey(Profile,on_delete=models.CASCADE,related_name='Profile1')
+    #user2 is the reviewee
     user2  = models.ForeignKey(Profile,on_delete=models.CASCADE,related_name='Profile2')
-    #rating = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(10)])
-    rating=models.CharField(max_length=100)
-    review = models.CharField(max_length=1024)
+    
+    #Fields to be stored encrypted by public key of reviewer
+    rating=models.TextField() 
+    review = models.TextField()
+    
+    #Fields to be stored encrypted by public key of reviewee
+    rating2=models.TextField()
+    review2 = models.TextField()
+    
     canEdit = models.BooleanField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return (self.user1.userid + " rated " + self.user2.userid)
+        return ("Anonymous rated " + self.user2.userid)
 
 class Work(models.Model):
     user = models.ForeignKey(Profile,on_delete=models.CASCADE)
