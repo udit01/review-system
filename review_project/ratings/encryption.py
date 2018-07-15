@@ -13,7 +13,6 @@ def my_rand(n):
 
 #returns an RSA key object
 def generate_key(password, salt):
-	print(type(password), type(salt))
 	global master_key
 	master_key = PBKDF2(password, salt, count=10000)
 
@@ -27,4 +26,3 @@ def encrypt(plaintext, key, k = random()):  #key is public key
 
 def decrypt (ciphertext, key):
 	return key.decrypt(ciphertext)
-
