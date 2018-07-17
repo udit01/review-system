@@ -425,6 +425,7 @@ class LoginView(View):
 class LogoutView(View):
     def get(self, request):
         try:
+            logout(request)
             if request.session['user_id']:
                 del request.session['user_id']
             if request.session['private_key']:
