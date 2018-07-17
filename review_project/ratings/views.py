@@ -10,6 +10,7 @@ from django.contrib.auth.models import User
 from . import models
 from . import forms
 from . import encryption
+from .utils import *
 import datetime
 from django.core import signing
 
@@ -52,7 +53,7 @@ class LeaderBoardView(View):
 
 class RegisterView(View):
     form_class_profile = forms.ProfileForm
-    template_name = 'registration/login.html'
+    template_name = 'ratings/register.html'
 
     def get(self,request):
         logged_in=False
@@ -88,7 +89,7 @@ class UserUpdate(generic.UpdateView):
     model = models.Profile
     fields = ['name','about','updated_at','work']
 
-########################################## Do @ superuserloginrequired here ###################################
+########################################### Do @ superuserloginrequired here ###################################
 class SudoView(View):
     form_class = forms.SudoForm
     template_name = 'registration/login.html'
@@ -121,7 +122,6 @@ class SudoView(View):
             # print (form)
             return render(request, self.template_name, {'logged_in':logged_in,'form':form, 'type':"Sudo", 'error_message': "Your Sudo form wasn't valid."})
 
-
 class UserDetailView(generic.DetailView):
     form_class = forms.RatingForm
     form_class_work = forms.WorkForm
@@ -145,22 +145,34 @@ class UserDetailView(generic.DetailView):
 
         uid = kwargs['uid'] # target user
         if request.user :
+            # print("AA",request.user)
             raterid = request.user.profile.userid
             ratingFound = False
             try:
                 user = models.Profile.objects.get(userid=uid)
                 target_user = models.User.objects.get(username=uid)
                 full_name = target_user.first_name + " " + target_user.last_name
+                print(user.user)
             except ObjectDoesNotExist:
                 return render(request, error_template ,{'error': "The User with User Id : "+ uid +" does not exist."})
+
+            
+            ratings_list=[models.Ratings.objects.get(id=i) for i in getRatingsGiven(raterid,request.session['private_key'])]
+            print(getRatingsGiven(raterid,request.session['private_key']))
+            print(ratings_list)
+
             try:
-                ratings = models.Rating.objects.all().filter(user2=raterid).filter(user2=user).order_by('-updated_at')
-                reviews=decrypt(ratings,'review')
-                ratings = decrypt(ratings,'rating')
+                # ratings = models.Rating.objects.all().filter(user2=raterid).filter(user2=user).order_by('-updated_at')
+                # reviews=decrypt(ratings,'review')
+                # ratings = decrypt(ratings,'rating')
+                
+                ratings_list_filtered=[i for i in ratings_list if i.user2==target_user ]
 
+                #Sort ratings_list by 'updated_at'
 
-                #ratings.append('lol')
-                #Have to decrypt it to show to the user.
+                ratings=[encryption.decrypt(rating.rating,request.session['private_key']) for rating in ratings_list_filtered ]
+                reviews=[encryption.decrypt(rating.review,request.session['private_key']) for rating in ratings_list_filtered ]
+
 
             except ObjectDoesNotExist:
                 current_rating = "Not yet rated by you. Rating Object after these filters doesn't exist."
@@ -205,10 +217,10 @@ class UserDetailView(generic.DetailView):
             current = True if (uid == raterid) else False   #If on your own profile
             together = []
             if(current):
-                curr_ratings = models.Rating.objects.filter(user2=rater).order_by('-updated_at')
+                # curr_ratings = models.Rating.objects.filter(user2=rater).order_by('-updated_at')
                 try:
-                    reviews=decrypt(curr_ratings,'review')
-                    ratings = decrypt(curr_ratings,'rating')
+                    ratings=[encryption.decrypt(rating.rating,request.session['private_key']) for rating in ratings_list ]
+                    reviews=[encryption.decrypt(rating.review,request.session['private_key']) for rating in ratings_list ]
                 except:
                     reviews=None
                     ratings=None
@@ -260,9 +272,18 @@ class UserDetailView(generic.DetailView):
             return render(request, error_template ,{'error': "Invalid Post Request."})
         if request.user :
             if form.is_valid() :
+
                 rnum = form.cleaned_data['rating']
                 rev = form.cleaned_data['review']
-                encryptedreview=signing.dumps((rev,))
+                # encryptedreview=signing.dumps((rev,))
+
+                # encrypted_rating = encryption.encrypt(rnum,request.user.profile.public_key)
+                # encrypted_rating2 = encryption.encrypt(rnum,target.public_key)
+ 
+                # encrypted_review = encryption.encrypt(rev,request.user.profile.public_key)
+                # encrypted_review2 = encryption.encrypt(rev,target.public_key)
+
+ 
                 rater = models.Profile.objects.get(userid = request.user.profile.userid)
                 full_name = target_user.first_name + " " + target_user.last_name
                 if kwargs['uid'] == None :
@@ -272,20 +293,33 @@ class UserDetailView(generic.DetailView):
                 else :
                     f = True
                     try:
-                        ratings = models.Rating.objects.all().filter(user2=rater).filter(user2=target).order_by('-updated_at')
-                        robj = ratings[0]
+                        # ratings = models.Rating.objects.all().filter(user2=rater).filter(user2=target).order_by('-updated_at')
+                        # robj = ratings[0]
+
+                        ratings_list=[models.Ratings.objects.get(id=i) for i in getRatingsGiven(raterid,request.session['private_key'])]
+                        ratings_list_filtered=[i for i in ratings_list if i.user2==target_user ]
+                        robj = ratings_list_filtered[0]
+
                         if (not robj.canEdit) :
                             f = False
                     except :
                         f = False
 
                     if f :
-                        robj.rating = rnum
-                        robj.review = encryptedreview
+                        # robj.rating = encrypted_rating
+                        # robj.rating2 = encrypted_rating2
+
+                        # robj.review = encrypted_review
+                        # robj.review2 = encrypted_review2
+                        editRating(robj.id,request.user.profile.userid,rnum,rev)
+
                     else :
-                        robj = models.Rating(user2 = target,
-                                            rating=rnum,review=encryptedreview, canEdit = True)
-                    robj.save()
+                        # robj = models.Rating(user2 = target,
+                        #                     rating=encrypted_rating,review=encrypted_review, 
+                        #                 rating2=encrypted_rating2, review2=encrypted_review2,canEdit = True)
+                        addRating(request.user.profile.userid,target.userid,rnum,rev,request.session['private_key'])
+                    # robj.save()
+
                 return redirect(self.request.path_info)
             elif workform.is_valid() :
                 onlychoices=request.POST.getlist('working[]') # Returns list of selected checkbox(decrypted)

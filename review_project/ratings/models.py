@@ -116,7 +116,7 @@ class Rating(models.Model):
     rating2=models.TextField()
     review2 = models.TextField()
     
-    canEdit = models.BooleanField()
+    canEdit = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

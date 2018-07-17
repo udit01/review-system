@@ -1,25 +1,26 @@
 from . import models
+from . import encryption
 import json
 #Helper functions to add/retrieve/edit ratings along with encryption/decryption
 
 
-def encrypt(pub_key, plainText):
-    pass
-
-def decrypt(priv_key, cipherText):
-    pass
 
 
 '''return a list of ratings given by user '''
 def getRatingsGiven(userid,priv_key):
     user = models.Profile.objects.get(userid = userid)
-    ratings_given=json.loads(decrypt(priv_key,user.ratings_given))
+    ratings_given=encryption.decrypt(user.ratings_given,priv_key)
+    if '[' in ratings_given :
+        print("RATINGS-",ratings_given)
+        ratings_given=json.loads(ratings_given)
+    else:
+        ratings_given=[]
     return ratings_given
 
 '''updates list of ratings given by user '''
 def updateRatingsGiven(userid,ratingsGiven):
     user = models.Profile.objects.get(userid = userid)
-    user.ratings_given=encrypt( user.pub_key,json.dumps(ratingsGiven) )
+    user.ratings_given=encryption.encrypt( json.dumps(ratingsGiven),user.public_key )
     user.save()
     return 
 
@@ -32,12 +33,13 @@ def addRating(user1_id, user2_id, rating, review, priv_key):
     user2 = models.Profile.objects.get(userid = user2_id)
     
     #encrypt data for both users
-    rating_enc_1=encrypt(user1.public_key,rating)
-    rating_enc_2=encrypt(user2.public_key,rating)
-    review_enc_1=encrypt(user1.public_key,review)
-    review_enc_2=encrypt(user2.public_key,review)
+    rating_enc_1=encryption.encrypt(rating,user1.public_key)
+    rating_enc_2=encryption.encrypt(rating,user2.public_key)
+    review_enc_1=encryption.encrypt(review,user1.public_key)
+    review_enc_2=encryption.encrypt(review,user2.public_key)
 
     #add rating to db
+
     rating=models.Rating(user2=user2,rating=rating_enc_1,
         rating2=rating_enc_2, review=review_enc_1,
         review2=review_enc_2 )
@@ -65,6 +67,7 @@ def deleteRating(rating_id,userid,priv_key):
     else:
         #if rating does not belong to user
         return False
+    return
 
 '''update rating with specified id'''
 def editRating(rating_id,userid, rating, review):
@@ -74,18 +77,22 @@ def editRating(rating_id,userid, rating, review):
         user1 = models.Profile.objects.get(userid = userid)
         user2 = rating.user2
         
-        #encrypt data for both users and update record
-        rating.rating=encrypt(user1.public_key,rating)
-        rating.rating2=encrypt(user2.public_key,rating)
-        rating.review=encrypt(user1.public_key,review)
-        rating.review2=encrypt(user2.public_key,review)
+        #encrypt data for both users
+        rating_enc_1=encryption.encrypt(rating,user1.public_key)
+        rating_enc_2=encryption.encrypt(rating,user2.public_key)
+        review_enc_1=encryption.encrypt(review,user1.public_key)
+        review_enc_2=encryption.encrypt(review,user2.public_key)
 
+        #add rating to db
+        rating=models.Rating(user2=user2,rating=rating_enc_1,
+            rating2=rating_enc_2, review=review_enc_1,
+            review2=review_enc_2 )
         rating.save()
         return True
     else:
         #if rating does not belong to user
         return False
-
+    return
 
     
 

@@ -2,6 +2,7 @@ from Crypto.Protocol.KDF import PBKDF2
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from random import random
+import base64
 
 global master_key
 
@@ -22,7 +23,15 @@ def generate_key(password, salt):
 	return RSA_key
 
 def encrypt(plaintext, key, k = random()):  #key is public key
-	return key.encrypt(plaintext.encode("utf-8"),k)
+	print("ENCRYPTING-",plaintext)
+	publickey=RSA.importKey(key)
+	encrypted_msg = publickey.encrypt(plaintext.encode('utf-8'), 32)[0]
+	encoded_encrypted_msg = base64.b64encode(encrypted_msg) # base64 encoded strings are database friendly
+	return encoded_encrypted_msg
 
 def decrypt (ciphertext, key):
-	return key.decrypt(ciphertext)
+	privatekey=RSA.importKey(key)
+	decoded_encrypted_msg = base64.b64decode(ciphertext)
+	print("DECRYPTING-",decoded_encrypted_msg)
+	decoded_decrypted_msg = privatekey.decrypt(decoded_encrypted_msg)
+	return decoded_decrypted_msg.decode('utf-8')
