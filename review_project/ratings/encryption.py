@@ -27,11 +27,11 @@ def encrypt(plaintext, key, k = random()):  #key is public key
 	publickey=RSA.importKey(key)
 	encrypted_msg = publickey.encrypt(plaintext.encode('utf-8'), 32)[0]
 	encoded_encrypted_msg = base64.b64encode(encrypted_msg) # base64 encoded strings are database friendly
-	return encoded_encrypted_msg
+	return encoded_encrypted_msg.decode('utf-8')
 
 def decrypt (ciphertext, key):
 	privatekey=RSA.importKey(key)
-	decoded_encrypted_msg = base64.b64decode(ciphertext)
+	decoded_encrypted_msg = base64.b64decode(ciphertext.encode('utf-8'))
 	print("DECRYPTING-",decoded_encrypted_msg)
 	decoded_decrypted_msg = privatekey.decrypt(decoded_encrypted_msg)
 	return decoded_decrypted_msg.decode('utf-8')

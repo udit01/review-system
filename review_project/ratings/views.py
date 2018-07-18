@@ -157,7 +157,7 @@ class UserDetailView(generic.DetailView):
                 return render(request, error_template ,{'error': "The User with User Id : "+ uid +" does not exist."})
 
             
-            ratings_list=[models.Ratings.objects.get(id=i) for i in getRatingsGiven(raterid,request.session['private_key'])]
+            ratings_list=[models.Rating.objects.get(id=i) for i in getRatingsGiven(raterid,request.session['private_key'])]
             print(getRatingsGiven(raterid,request.session['private_key']))
             print(ratings_list)
 
@@ -296,7 +296,7 @@ class UserDetailView(generic.DetailView):
                         # ratings = models.Rating.objects.all().filter(user2=rater).filter(user2=target).order_by('-updated_at')
                         # robj = ratings[0]
 
-                        ratings_list=[models.Ratings.objects.get(id=i) for i in getRatingsGiven(raterid,request.session['private_key'])]
+                        ratings_list=[models.Rating.objects.get(id=i) for i in getRatingsGiven(raterid,request.session['private_key'])]
                         ratings_list_filtered=[i for i in ratings_list if i.user2==target_user ]
                         robj = ratings_list_filtered[0]
 

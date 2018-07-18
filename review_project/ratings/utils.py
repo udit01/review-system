@@ -78,15 +78,11 @@ def editRating(rating_id,userid, rating, review):
         user2 = rating.user2
         
         #encrypt data for both users
-        rating_enc_1=encryption.encrypt(rating,user1.public_key)
-        rating_enc_2=encryption.encrypt(rating,user2.public_key)
-        review_enc_1=encryption.encrypt(review,user1.public_key)
-        review_enc_2=encryption.encrypt(review,user2.public_key)
+        rating.rating = encryption.encrypt(rating,user1.public_key)
+        rating.rating2 = encryption.encrypt(rating,user2.public_key)
+        rating.review = encryption.encrypt(review,user1.public_key)
+        rating.review2 = encryption.encrypt(review,user2.public_key)
 
-        #add rating to db
-        rating=models.Rating(user2=user2,rating=rating_enc_1,
-            rating2=rating_enc_2, review=review_enc_1,
-            review2=review_enc_2 )
         rating.save()
         return True
     else:
