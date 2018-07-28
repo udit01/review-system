@@ -74,7 +74,6 @@ class RegisterView(View):
             key = encryption.generate_key(raw_password,b"hackfest")
             request.session['private_key'] = key.exportKey().decode('utf-8')
             user.profile.public_key = key.publickey().exportKey().decode('utf-8')
-            print(request.session['private_key'])            
             user.profile.about = form_profile.cleaned_data.get('about')
             user.save()
             user = authenticate(username=user.username, password=raw_password)
@@ -92,7 +91,7 @@ class UserUpdate(generic.UpdateView):
 ########################################### Do @ superuserloginrequired here ###################################
 class SudoView(View):
     form_class = forms.SudoForm
-    template_name = 'registration/login.html'
+    template_name = 'ratings/sudo.html'
     # Add user id to session variables
     @method_decorator(user_passes_test(lambda u: u.is_superuser,login_url='/login/'))
     def get(self,request):
@@ -158,8 +157,6 @@ class UserDetailView(generic.DetailView):
 
             
             ratings_list=[models.Rating.objects.get(id=i) for i in getRatingsGiven(raterid,request.session['private_key'])]
-            print(getRatingsGiven(raterid,request.session['private_key']))
-            print(ratings_list)
 
             try:
                 # ratings = models.Rating.objects.all().filter(user2=raterid).filter(user2=user).order_by('-updated_at')
@@ -170,7 +167,7 @@ class UserDetailView(generic.DetailView):
 
                 #Sort ratings_list by 'updated_at'
 
-                ratings=[encryption.decrypt(rating.rating,request.session['private_key']) for rating in ratings_list_filtered ]
+                ratings=[rating.rating for rating in ratings_list_filtered ]
                 reviews=[encryption.decrypt(rating.review,request.session['private_key']) for rating in ratings_list_filtered ]
 
 
@@ -219,7 +216,7 @@ class UserDetailView(generic.DetailView):
             if(current):
                 # curr_ratings = models.Rating.objects.filter(user2=rater).order_by('-updated_at')
                 try:
-                    ratings=[encryption.decrypt(rating.rating,request.session['private_key']) for rating in ratings_list ]
+                    ratings=[rating.rating for rating in ratings_list ]
                     reviews=[encryption.decrypt(rating.review,request.session['private_key']) for rating in ratings_list ]
                 except Exception as e:
                     print(e)

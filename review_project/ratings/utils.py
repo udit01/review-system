@@ -11,7 +11,6 @@ def getRatingsGiven(userid,priv_key):
     user = models.Profile.objects.get(userid = userid)
     ratings_given=encryption.decrypt(user.ratings_given,priv_key)
     if '[' in ratings_given :
-        print("RATINGS-",ratings_given)
         ratings_given=json.loads(ratings_given)
     else:
         ratings_given=[]

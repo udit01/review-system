@@ -24,7 +24,6 @@ def generate_key(password, salt):
 	return RSA_key
 
 def encrypt(plaintext, key, k = random.random()):  #key is public key
-	print("ENCRYPTING-",plaintext)
 
 	#Generate salt
 	salt=''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(12))
@@ -38,6 +37,5 @@ def encrypt(plaintext, key, k = random.random()):  #key is public key
 def decrypt (ciphertext, key):
 	privatekey=RSA.importKey(key)
 	decoded_encrypted_msg = base64.b64decode(ciphertext.encode('utf-8'))
-	print("DECRYPTING-",decoded_encrypted_msg)
 	decoded_decrypted_msg = (privatekey.decrypt(decoded_encrypted_msg)).decode('utf-8')
 	return decoded_decrypted_msg[:-12]
