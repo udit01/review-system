@@ -48,12 +48,7 @@ class Profile(models.Model):
         cur_rating = 0.0
 
         for r in rl :
-            #decrypt it here
-            m=r.rating
-            decryptm=signing.loads(m)
-            #rate=decrypt(r,'rating')
-            rate=decryptm[0]
-            #cum_rating += r.rating
+            rate=int(r.rating)
             cum_rating+=rate
             totalRatings += 1
             try:
@@ -72,11 +67,12 @@ class Profile(models.Model):
             self.current_rating   = 0
             self.cumulated_rating = 0
 
-        # person cannot rate themselves
-        if Rating.objects.all().filter(user1 = self.userid).count() < (User.objects.all().exclude(is_superuser=True).count()-1 ):
-            self.canSee = False
-        else :
-            self.canSee = True
+        #self.canSee is set/unset by EveryoneCanSee field in Control model only, hence next block of code is commented out
+
+        # if Rating.objects.all().filter(user1 = self.userid).count() < (User.objects.all().exclude(is_superuser=True).count()-1 ):
+        #     self.canSee = False
+        # else :
+        #     self.canSee = True
 
     def get_absolute_url(self):
         return ("/user/"+self.userid)
@@ -108,12 +104,12 @@ class Rating(models.Model):
     #user2 is the reviewee
     user2  = models.ForeignKey(Profile,on_delete=models.CASCADE,related_name='Profile2')
     
-    #Fields to be stored encrypted by public key of reviewer
-    rating=models.TextField() 
+    rating=models.CharField(max_length=100) 
+    
+    #Field to be stored encrypted by public key of reviewer
     review = models.TextField()
     
-    #Fields to be stored encrypted by public key of reviewee
-    rating2=models.TextField()
+    #Field to be stored encrypted by public key of reviewee
     review2 = models.TextField()
     
     canEdit = models.BooleanField(default=True)

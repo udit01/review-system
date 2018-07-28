@@ -221,7 +221,8 @@ class UserDetailView(generic.DetailView):
                 try:
                     ratings=[encryption.decrypt(rating.rating,request.session['private_key']) for rating in ratings_list ]
                     reviews=[encryption.decrypt(rating.review,request.session['private_key']) for rating in ratings_list ]
-                except:
+                except Exception as e:
+                    print(e)
                     reviews=None
                     ratings=None
                 for j in range(len(reviews)):
