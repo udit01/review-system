@@ -216,12 +216,13 @@ class UserDetailView(generic.DetailView):
             if(current):
                 # curr_ratings = models.Rating.objects.filter(user2=rater).order_by('-updated_at')
                 try:
+                    print("in current")
+                    ratings_list=models.Rating.objects.filter(user2=raterid).order_by('-updated_at') 
                     ratings=[rating.rating for rating in ratings_list ]
-                    reviews=[encryption.decrypt(rating.review,request.session['private_key']) for rating in ratings_list ]
-                except Exception as e:
-                    print(e)
-                    reviews=None
-                    ratings=None
+                    reviews=[encryption.decrypt(rating.review2,request.session['private_key']) for rating in ratings_list ]
+                except models.Rating.DoesNotExist:
+                    reviews=[]
+                    ratings=[]
                 for j in range(len(reviews)):
                     together.append({'rating':ratings[j],'review':reviews[j]})
 
