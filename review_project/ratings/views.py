@@ -9,6 +9,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from . import models
 from . import forms
+from . import encryption
+from .utils import *
 import datetime
 from django.core import signing
 
@@ -51,7 +53,7 @@ class LeaderBoardView(View):
 
 class RegisterView(View):
     form_class_profile = forms.ProfileForm
-    template_name = 'registration/login.html'
+    template_name = 'ratings/register.html'
 
     def get(self,request):
         logged_in=False
@@ -66,9 +68,14 @@ class RegisterView(View):
         if form_profile.is_valid():
             user = form_profile.save()
             user.refresh_from_db()  # load the profile instance created by the signal
+
+            raw_password = form_profile.cleaned_data.get('password1')
+
+            key = encryption.generate_key(raw_password,b"hackfest")
+            request.session['private_key'] = key.exportKey().decode('utf-8')
+            user.profile.public_key = key.publickey().exportKey().decode('utf-8')
             user.profile.about = form_profile.cleaned_data.get('about')
             user.save()
-            raw_password = form_profile.cleaned_data.get('password1')
             user = authenticate(username=user.username, password=raw_password)
             print (user.username)
             login(request, user)
@@ -81,10 +88,10 @@ class UserUpdate(generic.UpdateView):
     model = models.Profile
     fields = ['name','about','updated_at','work']
 
-########################################## Do @ superuserloginrequired here ###################################
+########################################### Do @ superuserloginrequired here ###################################
 class SudoView(View):
     form_class = forms.SudoForm
-    template_name = 'registration/login.html'
+    template_name = 'ratings/sudo.html'
     # Add user id to session variables
     @method_decorator(user_passes_test(lambda u: u.is_superuser,login_url='/login/'))
     def get(self,request):
@@ -114,7 +121,6 @@ class SudoView(View):
             # print (form)
             return render(request, self.template_name, {'logged_in':logged_in,'form':form, 'type':"Sudo", 'error_message': "Your Sudo form wasn't valid."})
 
-
 class UserDetailView(generic.DetailView):
     form_class = forms.RatingForm
     form_class_work = forms.WorkForm
@@ -138,22 +144,32 @@ class UserDetailView(generic.DetailView):
 
         uid = kwargs['uid'] # target user
         if request.user :
+            # print("AA",request.user)
             raterid = request.user.profile.userid
             ratingFound = False
             try:
                 user = models.Profile.objects.get(userid=uid)
                 target_user = models.User.objects.get(username=uid)
                 full_name = target_user.first_name + " " + target_user.last_name
+                print(user.user)
             except ObjectDoesNotExist:
                 return render(request, error_template ,{'error': "The User with User Id : "+ uid +" does not exist."})
+
+            
+            ratings_list=[models.Rating.objects.get(id=i) for i in getRatingsGiven(raterid,request.session['private_key'])]
+
             try:
-                ratings = models.Rating.objects.all().filter(user1=raterid).filter(user2=user).order_by('-updated_at')
-                reviews=decrypt(ratings,'review')
-                ratings = decrypt(ratings,'rating')
+                # ratings = models.Rating.objects.all().filter(user2=raterid).filter(user2=user).order_by('-updated_at')
+                # reviews=decrypt(ratings,'review')
+                # ratings = decrypt(ratings,'rating')
+                
+                ratings_list_filtered=[i for i in ratings_list if i.user2==target_user ]
 
+                #Sort ratings_list by 'updated_at'
 
-                #ratings.append('lol')
-                #Have to decrypt it to show to the user.
+                ratings=[rating.rating for rating in ratings_list_filtered ]
+                reviews=[encryption.decrypt(rating.review,request.session['private_key']) for rating in ratings_list_filtered ]
+
 
             except ObjectDoesNotExist:
                 current_rating = "Not yet rated by you. Rating Object after these filters doesn't exist."
@@ -198,13 +214,15 @@ class UserDetailView(generic.DetailView):
             current = True if (uid == raterid) else False   #If on your own profile
             together = []
             if(current):
-                curr_ratings = models.Rating.objects.filter(user2=rater).order_by('-updated_at')
+                # curr_ratings = models.Rating.objects.filter(user2=rater).order_by('-updated_at')
                 try:
-                    reviews=decrypt(curr_ratings,'review')
-                    ratings = decrypt(curr_ratings,'rating')
-                except:
-                    reviews=None
-                    ratings=None
+                    print("in current")
+                    ratings_list=models.Rating.objects.filter(user2=raterid).order_by('-updated_at') 
+                    ratings=[rating.rating for rating in ratings_list ]
+                    reviews=[encryption.decrypt(rating.review2,request.session['private_key']) for rating in ratings_list ]
+                except models.Rating.DoesNotExist:
+                    reviews=[]
+                    ratings=[]
                 for j in range(len(reviews)):
                     together.append({'rating':ratings[j],'review':reviews[j]})
 
@@ -253,9 +271,18 @@ class UserDetailView(generic.DetailView):
             return render(request, error_template ,{'error': "Invalid Post Request."})
         if request.user :
             if form.is_valid() :
+
                 rnum = form.cleaned_data['rating']
                 rev = form.cleaned_data['review']
-                encryptedreview=signing.dumps((rev,))
+                # encryptedreview=signing.dumps((rev,))
+
+                # encrypted_rating = encryption.encrypt(rnum,request.user.profile.public_key)
+                # encrypted_rating2 = encryption.encrypt(rnum,target.public_key)
+ 
+                # encrypted_review = encryption.encrypt(rev,request.user.profile.public_key)
+                # encrypted_review2 = encryption.encrypt(rev,target.public_key)
+
+ 
                 rater = models.Profile.objects.get(userid = request.user.profile.userid)
                 full_name = target_user.first_name + " " + target_user.last_name
                 if kwargs['uid'] == None :
@@ -265,21 +292,33 @@ class UserDetailView(generic.DetailView):
                 else :
                     f = True
                     try:
-                        ratings = models.Rating.objects.all().filter(user1=rater).filter(user2=target).order_by('-updated_at')
-                        robj = ratings[0]
+                        # ratings = models.Rating.objects.all().filter(user2=rater).filter(user2=target).order_by('-updated_at')
+                        # robj = ratings[0]
+
+                        ratings_list=[models.Rating.objects.get(id=i) for i in getRatingsGiven(raterid,request.session['private_key'])]
+                        ratings_list_filtered=[i for i in ratings_list if i.user2==target_user ]
+                        robj = ratings_list_filtered[0]
+
                         if (not robj.canEdit) :
                             f = False
                     except :
                         f = False
 
                     if f :
-                        robj.rating = rnum
-                        robj.review = encryptedreview
+                        # robj.rating = encrypted_rating
+                        # robj.rating2 = encrypted_rating2
+
+                        # robj.review = encrypted_review
+                        # robj.review2 = encrypted_review2
+                        editRating(robj.id,request.user.profile.userid,rnum,rev)
+
                     else :
-                        robj = models.Rating(user1 = rater,
-                                            user2 = target,
-                                            rating=rnum,review=encryptedreview, canEdit = True)
-                    robj.save()
+                        # robj = models.Rating(user2 = target,
+                        #                     rating=encrypted_rating,review=encrypted_review, 
+                        #                 rating2=encrypted_rating2, review2=encrypted_review2,canEdit = True)
+                        addRating(request.user.profile.userid,target.userid,rnum,rev,request.session['private_key'])
+                    # robj.save()
+
                 return redirect(self.request.path_info)
             elif updateform.is_valid() :
                 about = updateform.cleaned_data['about']
@@ -339,51 +378,62 @@ class UserDetailView(generic.DetailView):
 
 #  For Udit
 #  ---------------------------------Redundant Classes-------------------------------------
-# class LoginView(View):
-#     form_class = forms.LoginForm
-#     template_name = 'ratings/login.html'
-#     # Add user id to session variables
-#     def get(self,request):
-#         form = self.form_class(None)
-#         return render(request, self.template_name, {'form':form})
-# print("-----------------------------------------------------")
-# print (form) # this turned out to be null
-# # print (form.cleaned_data)
-# # print (form.cleaned_data['userid'])
-# # print (form.cleaned_data['password'])
+class LoginView(View):
+    form_class = forms.LoginForm
+    template_name = 'ratings/login.html'
+    # Add user id to session variables
+    def get(self,request):
+        form = self.form_class(None)
+        return render(request, self.template_name, {'form':form})
+    # print("-----------------------------------------------------")
+    # print (form) # this turned out to be null
+    # print (form.cleaned_data)
+    # print (form.cleaned_data['userid'])
+    # print (form.cleaned_data['password'])
 
-# if form.is_valid() :
-#     # form.save()
-#     uid = form.cleaned_data['userid']
-#     paswd = form.cleaned_data['password']
-#     try:
-#         uobj = models.User.objects.get(userid=uid)
-#         if(uobj):
-#             if(uobj.password == paswd) :
-#                 request.session['user_id'] = form.cleaned_data['userid']
-#                 return redirect('ratings:index')
-#             else :
-#                 return render(request, self.template_name, {'form': form ,'error_message': "Password doesn't match","type":"Login"})
-#         else :
-#             return render(request, self.template_name, {'form': form ,'error_message': "User doesn't exist.","type":"Login"})
-#     except ObjectDoesNotExist :
-#         return render(request, self.template_name, { 'form': form ,'error_message': "User ID doesn't exist.","type":"Login"})
+    def post(self, request):
+        form = self.form_class(request.POST)
+        if form.is_valid() :
+            # form.save()
+            uid = form.cleaned_data['userid']
+            paswd = form.cleaned_data['password']
+            try:
+                uobj = models.User.objects.get(username=uid)
+                if(uobj):
+                    user = authenticate(username = uid, password = paswd)
+                        
+                    if user is not None:
+                        if user.is_active:
+                            login(request, user)
+                            key = encryption.generate_key(paswd,b"hackfest")
+                            request.session['private_key'] = key.exportKey().decode('utf-8')
+                            request.session['user_id'] = form.cleaned_data['userid']
+                        return redirect('ratings:index')
+                    else :
+                        return render(request, self.template_name, {'form': form ,'error_message': "Password doesn't match","type":"Login"})
+                else :
+                    return render(request, self.template_name, {'form': form ,'error_message': "User doesn't exist.","type":"Login"})
+            except ObjectDoesNotExist :
+                return render(request, self.template_name, { 'form': form ,'error_message': "User ID doesn't exist.","type":"Login"})
 
-#     return redirect('ratings:index')
-# else :
-#     print("-----------------------------------------------------")
-#     print (form)
-#     # print (request.session['user_id'])
-#     return redirect('ratings:login')
+            return redirect('ratings:index')
+        else :
+            print("-----------------------------------------------------")
+            print (form)
+            # print (request.session['user_id'])
+            return redirect('ratings:login')
 
-# class LogoutView(View):
-#     def get(self, request):
-#         try:
-#             if request.session['user_id']:
-#                 del request.session['user_id']
-#         except Exception:
-#             pass
-#         return redirect('ratings:login')
+class LogoutView(View):
+    def get(self, request):
+        try:
+            logout(request)
+            if request.session['user_id']:
+                del request.session['user_id']
+            if request.session['private_key']:
+                del(request.session['private_key'])
+        except Exception:
+            pass
+        return redirect('ratings:login')
 
 # class RegisterView(View):
 #     form_class = forms.UserForm

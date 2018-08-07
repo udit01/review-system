@@ -20,8 +20,7 @@ class RatingForm(forms.ModelForm):
     class Meta:
         choices=[]
         for i in range(1,11):
-            en=signing.dumps((i,)) #Second is the shown value
-            curr_choice=(en,i) #Do remember that 'en' is the encryption of the TUPLE
+            curr_choice=(i,i) #Do remember that 'en' is the encryption of the TUPLE
             choices.append(curr_choice)
 
         model = models.Rating
