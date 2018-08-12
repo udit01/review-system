@@ -10,25 +10,27 @@ First clone the repository using ```git clone``` . Then run by any of the method
 1. Using Anaconda :
 
 ```
-$ conda create -n rvs python=3
-$ source activate rvs
+$ conda create -n ReviewSystem python=3
+$ source activate ReviewSystem
 $ pip install -r requirements.txt
 ```
+
 
 2. Using Virtualenv :
 Open the ReviewSystem-master folder then type:
 ```
-$ virtualenv ReviewSystem
+$ virtualenv -p python=3 ReviewSystem
 $ . ReviewSystem/bin/activate
 $ pip install -r requirements.txt
-$ touch review_project/ratings/migrations/__init__.py
 ```
 After pip installs the requirements, a folder 'migrations' is created in the app 'ratings' and an empty file '__init__.py' is added. 
 
 ## Running the app for the first time
 
-Open the review_project folder
+Open the review_project folder and execute the following commands 
+
 ```
+$ touch ratings/migrations/__init__.py
 $ python manage.py makemigrations
 $ python manage.py migrate
 $ python manage.py runserver

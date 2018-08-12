@@ -1,6 +1,9 @@
+ReviewSystem/
+rvs/
 venv/
 db.sqlite3
 migrations/
+envname/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

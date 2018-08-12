@@ -328,6 +328,13 @@ class UserDetailView(generic.DetailView):
                                             rating=rnum,review=encryptedreview, canEdit = True)
                     robj.save()
                 return redirect(self.request.path_info)
+            elif updateform.is_valid() :
+                about = updateform.cleaned_data['about']
+                user = models.Profile.objects.get(userid = request.user.profile.userid)
+                user.about = about
+                user.save()
+                return redirect(self.request.path_info)
+            
             elif workform.is_valid() :
                 onlychoices=request.POST.getlist('working[]') # Returns list of selected checkbox(decrypted)
                 work = workform.cleaned_data['work']
@@ -354,12 +361,7 @@ class UserDetailView(generic.DetailView):
                                     r[i].delete()
                                     break
                 return redirect(self.request.path_info)
-            elif updateform.is_valid() :
-                about = updateform.cleaned_data['about']
-                user = models.Profile.objects.get(userid = request.user.profile.userid)
-                user.about = about
-                user.save()
-                return redirect(self.request.path_info)
+
             else :
                 # print (request.session['user_id'])
                 return render( request, self.template_name , {'error_message': "Ratings form wan't valid.", 'form':form, 'user':target_user, 'name':full_name} )

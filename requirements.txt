@@ -1,15 +1,1 @@
-certifi==2018.1.18
 Django==2.0.3
-django-braces==1.12.0
-django-generic-positions==0.2.2
-django-hvad==1.8.0
-django-libs==1.67.13
-django-model-utils==3.1.1
-django-review==1.9.7
-django-star-ratings==0.6.1
-django-user-media==1.2.4
-easy-thumbnails==2.5
-Pillow==5.0.0
-pytz==2018.3
-simplejson==3.13.2
-swapper==1.1.0
