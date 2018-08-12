@@ -12,7 +12,7 @@
     <div class="row">
 
         <div class="col-sm-12 col-md-5 center-small login-form">
-            <h3 class="text-center">{{ type }}</h3>
+            <h3 class="text-center">{% if form %}{{ type }}{% endif %}</h3>
             {% if type == "Login" %}
                 {% if form.errors %}
                     {%for i in form.errors.values%}
@@ -23,6 +23,7 @@
             {% if error_message %}
                 <p><strong>{{ error_message }}</strong></p>
             {% endif %}
+            {% if form %}
             <form class="card" action="" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 {% include 'ratings/genericForm.html' %}
@@ -32,6 +33,15 @@
                     </div>
                 </div>
             </form>
+            {% else%}
+            <div class="card">
+              <div class="form-group">
+                <div class="col-sm-12 ">
+                  <h6 class="text-center"><strong>Registration has been prohibited by the Sudo-User</strong></h6>
+                </div>
+              </div>
+          </div>
+            {% endif %}
         </div>
 
     </div>

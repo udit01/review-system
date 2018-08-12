@@ -42,7 +42,16 @@ class LeaderBoardView(View):
         object_list = models.Profile.objects.all().order_by('-current_rating')
         ratercansee = request.user.profile.canSee
         logged_in=True
-        return render(request, self.template_name, {'object_list':object_list,'ratercansee':ratercansee,'logged_in':logged_in})
+        curr_user=request.user.profile
+        object_dictionary=[]
+        for ratee in object_list:
+            tv=ratee.has_rated(curr_user)
+            if tv==None:
+                pass
+            else:
+                object_dictionary.append({'profile':ratee,'has_rated':tv})
+                #ratinglist.append(tv)
+        return render(request, self.template_name, {'object_dictionary':object_dictionary, 'object_list':object_list,'ratercansee':ratercansee,'logged_in':logged_in})
 
     # def get_context_data(self, **kwargs):
     #     ctx = super(LeaderBoardView, self).get_context_data(**kwargs)
@@ -55,8 +64,15 @@ class RegisterView(View):
 
     def get(self,request):
         logged_in=False
-        form_profile = self.form_class_profile(None)
-        return render(request, self.template_name, {'form':form_profile,"type":"Register",'logged_in':logged_in})
+        trial= (models.Control.objects.all().order_by('-updated_at'))[0]
+        registration=trial.RegistrationEnabled
+        if registration:
+            form_profile = self.form_class_profile(None)
+        else:
+            form_profile=None
+
+        return render(request, self.template_name, {'form':form_profile,"type":"Register",
+        'logged_in':logged_in,'registration':registration})
 
     def post(self,request):
         logged_in=False
@@ -91,21 +107,49 @@ class SudoView(View):
         logged_in=True
         try :
             ctrl = (models.Control.objects.all().order_by('-updated_at'))[0]
+            registration=ctrl.RegistrationEnabled
         except :
             ctrl = models.Control()
 
         form = self.form_class(instance=ctrl)
 
-        return render(request, self.template_name, {'logged_in':logged_in,'form':form, 'type':"Sudo"})
+        return render(request, self.template_name, {'registration':registration,'logged_in':logged_in,'form':form, 'type':"Sudo"})
 
     @method_decorator(user_passes_test(lambda u: u.is_superuser,login_url='/login/'))
     def post(self,request):
         form = self.form_class(request.POST)
 
         if form.is_valid() :
-            form.save()
+            SessionNumber=form.cleaned_data['SessionNumber']
             # commit = False ?
-            ctrl = (models.Control.objects.all().order_by('-updated_at'))[0]
+            try:
+                ctrl = (models.Control.objects.all().order_by('-updated_at'))[0]
+                if ctrl.SessionNumber==SessionNumber: #Don't create new query object, instead change the current
+                    ctrl.RegistrationEnabled=form.cleaned_data['RegistrationEnabled']
+                    ctrl.EveryoneCanSee=form.cleaned_data['EveryoneCanSee']
+                    ctrl.EveryoneCanRate=form.cleaned_data['EveryoneCanRate']
+                    ctrl.EveryoneCanEdit=form.cleaned_data['EveryoneCanEdit']
+                    ctrl.UpdateEveryone=form.cleaned_data['UpdateEveryone']
+                else:
+                    RegistrationEnabled=form.cleaned_data['RegistrationEnabled']
+                    EveryoneCanSee=form.cleaned_data['EveryoneCanSee']
+                    EveryoneCanRate=form.cleaned_data['EveryoneCanRate']
+                    EveryoneCanEdit=form.cleaned_data['EveryoneCanEdit']
+                    UpdateEveryone=form.cleaned_data['UpdateEveryone']
+                    new_ctrl=models.Control(SessionNumber=SessionNumber,RegistrationEnabled=RegistrationEnabled,
+                    EveryoneCanSee=EveryoneCanSee,EveryoneCanEdit=EveryoneCanEdit,EveryoneCanRate=EveryoneCanRate,
+                    UpdateEveryone=UpdateEveryone)
+                    ctrl=new_ctrl
+            except:
+                RegistrationEnabled=form.cleaned_data['RegistrationEnabled']
+                EveryoneCanSee=form.cleaned_data['EveryoneCanSee']
+                EveryoneCanRate=form.cleaned_data['EveryoneCanRate']
+                EveryoneCanEdit=form.cleaned_data['EveryoneCanEdit']
+                UpdateEveryone=form.cleaned_data['UpdateEveryone']
+                new_ctrl=models.Control(SessionNumber=SessionNumber,RegistrationEnabled=RegistrationEnabled,
+                EveryoneCanSee=EveryoneCanSee,EveryoneCanEdit=EveryoneCanEdit,EveryoneCanRate=EveryoneCanRate,
+                UpdateEveryone=UpdateEveryone)
+                ctrl=new_ctrl
             ctrl.updateOthers()
             ctrl.save()
             # idk why but just do it
@@ -209,7 +253,9 @@ class UserDetailView(generic.DetailView):
                     together.append({'rating':ratings[j],'review':reviews[j]})
 
 
-            return render(request, self.template_name, {'logged_in':logged_in,'works_together':works_together, 'user':user, 'name':full_name, 'current':current, 'current_rated':current_rating, 'works': works, 'ratingFound':ratingFound, 'form':form, 'workform':form_work, 'updateform':form_update, 'together':together, 'rater':rater,'current_review':current_review})
+            return render(request, self.template_name, {'logged_in':logged_in,'works_together':works_together, 'user':user, 'name':full_name,
+            'current':current, 'current_rated':current_rating, 'works': works, 'ratingFound':ratingFound, 'form':form, 'workform':form_work,
+            'updateform':form_update, 'together':together, 'rater':rater,'current_review':current_review})
 
         else:
             try :
@@ -237,7 +283,8 @@ class UserDetailView(generic.DetailView):
                     start=works[t]
                 works_together.append({'start':start,'work':works[t]})
 
-            return render(request, self.template_name, {'logged_in':logged_in,'works_together':works_together, 'user':user, 'name':full_name, 'current':False, 'works':works})#,'decryptworks':decryptworks})
+            return render(request, self.template_name, {'logged_in':logged_in,'works_together':works_together, 'user':user,
+            'name':full_name, 'current':False, 'works':works})#,'decryptworks':decryptworks})
 
     def post(self, request, **kwargs):
         form = self.form_class(request.POST)
