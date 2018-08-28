@@ -75,7 +75,10 @@ class RegisterView(View):
 
     def get(self,request):
         logged_in=False
-        trial= (models.Control.objects.all().order_by('-updated_at'))[0]
+        try:
+            trial= (models.Control.objects.all().order_by('-updated_at'))[0]
+        except:
+            trial= (models.Control())
         registration=trial.RegistrationEnabled
         if registration:
             form_profile = self.form_class_profile(None)
