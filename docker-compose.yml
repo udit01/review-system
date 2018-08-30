@@ -6,8 +6,8 @@ services:
     ports:
       - "5080:8000"
     entrypoint: /docker-entrypoint.sh
-    #env_file:
-    #  - ./.env
+    env_file:
+      - ./.env
     restart: unless-stopped
     networks:
       - "internal"
