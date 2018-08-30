@@ -1,0 +1,26 @@
+version: '3.4'
+services:
+  reviewsystem:
+    build: .
+    image: "devclubiitd/review_system:0.1"
+    ports:
+      - "5080:8000"
+    entrypoint: /docker-entrypoint.sh
+    #env_file:
+    #  - ./.env
+    restart: unless-stopped
+    networks:
+      - "internal"
+      - "reverseproxy"
+    #healthcheck:
+    #  test: ["CMD", "curl", "-f", "http://127.0.0.1:8000"]
+    #  interval: 1m30s
+    #  timeout: 10s
+    #  retries: 3
+    #  start_period: 40s
+
+networks:
+  reverseproxy:
+    external:
+      name: "reverseproxy"
+  internal:

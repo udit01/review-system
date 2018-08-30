@@ -109,3 +109,4 @@ ENV/
 
 # vscode
 .vscode/
+.gitsecret/keys/random_seed
