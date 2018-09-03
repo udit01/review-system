@@ -94,7 +94,24 @@
         {% if error_message %}
                 <p><strong>{{ error_message }}</strong></p>
         {% endif %}
-
+        {% if current %}
+        {% if all_users %}
+        <div class ="row">
+          <div class="col-sm-12 row">
+              <div class="font-lora col-sm-4">People to rate: </div>
+          </div>
+        </div>
+        {% endif %}
+        <div class="container" style="margin-left:20px;">
+            <table class="table">
+            <tbody>
+                    {% for other_user in all_users %}
+                        <tr><a href = "{{other_user.get_absolute_url}}"><div class="card work-card">{{ other_user }}</div></a></tr>
+                    {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% endif %}
         {% if form and not current %}
         <form  class="form-horizontal" action="" method="post" enctype="multipart/form-data">
             {% csrf_token %}

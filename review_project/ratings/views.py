@@ -75,7 +75,10 @@ class RegisterView(View):
 
     def get(self,request):
         logged_in=False
-        trial= (models.Control.objects.all().order_by('-updated_at'))[0]
+        try:
+            trial= (models.Control.objects.all().order_by('-updated_at'))[0]
+        except:
+            trial = (models.Control())
         registration=trial.RegistrationEnabled
         if registration:
             form_profile = self.form_class_profile(None)
@@ -263,8 +266,20 @@ class UserDetailView(generic.DetailView):
                     ratings=None
                 for j in range(len(reviews)):
                     together.append({'rating':ratings[j],'review':reviews[j]})
+            users_left_to_rate =[]
+            try:
+                all_users = models.Profile.objects.all().exclude(user = target_user)
+                for j in all_users:
+                    val = j.user.is_superuser
+                    filter = models.Rating.objects.all().filter(user1 = user).filter(user2 = j)
+                    if filter or val :
+                        continue
+                    else:
+                        users_left_to_rate.append(j)
+            except:
+                users_left_to_rate = []
 
-            return render(request, self.template_name, {'logged_in':logged_in,'works_together':works_together, 'user':user, 'name':full_name, 'current':current, 'current_rated':current_rating, 'works': works, 'ratingFound':ratingFound, 'form':form, 'workform':form_work, 'updateform':form_update, 'together':together, 'rater':rater,'current_review':current_review})
+            return render(request, self.template_name, {'all_users':users_left_to_rate,'logged_in':logged_in,'works_together':works_together, 'user':user, 'name':full_name, 'current':current, 'current_rated':current_rating, 'works': works, 'ratingFound':ratingFound, 'form':form, 'workform':form_work, 'updateform':form_update, 'together':together, 'rater':rater,'current_review':current_review})
 
         else:
             try :
