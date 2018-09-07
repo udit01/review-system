@@ -91,6 +91,25 @@ class Profile(models.Model):
             return decrypted_work[0]
         except:
             return None
+    def session_wise_ratings(self):
+       ratings=Rating.objects.all().filter(user2=self)
+       ratinglist=decrypt(ratings,'rating')
+       S={}#Dictionary with keys are session and values as a list of ratings(decrypted?)
+       for each in range(len(ratings)):
+           session=ratings[each].get_session_number()
+           if session in S.keys():
+               value=S[session]
+               value.append(ratinglist[each]) #rating is decrypted
+               S[session]=value
+           else:
+               value=[]
+               value.append(ratinglist[each])
+               S[session]=value #rating is decrypted
+       for t in S:
+           value=S[t]
+           avg=sum(value)/len(value)
+           S[t]=avg
+       return S
 
     @receiver(post_save, sender=User)
     def create_user_profile(sender, instance, created, **kwargs):
@@ -114,6 +133,16 @@ class Rating(models.Model):
 
     def __str__(self):
         return (self.user1.userid + " rated " + self.user2.userid)
+    def get_session_number(self):
+        ratingTime = self.created_at.timestamp()
+        sessionSet=Control.objects.all().order_by('-updated_at')
+        for each in sessionSet:
+            if each.updated_at.timestamp()>ratingTime:
+                continue
+            else:
+                sessno=str(each)
+                sessno.lstrip("Control:")
+                return sessno
 
 class Work(models.Model):
     user = models.ForeignKey(Profile,on_delete=models.CASCADE)
